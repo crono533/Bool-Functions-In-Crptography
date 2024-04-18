@@ -1035,6 +1035,32 @@ void Test_BAA()
 
     cout << endl;
 }
+
+void Test_nearest_counterwaight()
+{
+    cout << "------------------------------------------------" << endl;
+    BF func1("0000000000000000000000000000000000000000000000000000000000000000");
+    cout << func1 << endl;
+    func1.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func2("1111111111111111111111111111111111111111111111111111111111111111");
+    cout << func2 << endl;
+    func2.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func3("0001");
+    cout << func3 << endl;
+    func3.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func4("1110");
+    cout << func4 << endl;
+    func4.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func("0001000001001010");
+    cout << func << endl;
+    func.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+
+}
 int main()
 {
     setlocale(LC_ALL, "Rus");
@@ -1063,15 +1089,6 @@ int main()
     // Test_linear_vars();
 
     //Доп задание 3: дан вектор, найти ближайший уравновешенный вектор
-    BF func("1111111111111111111111111111111111111111111111111111111111111111");
-
-
-
-
-    cout << func << endl;
-    func.nearest_counterweigh();
-
-
-
+    Test_nearest_counterwaight();
     return 0;
 }
