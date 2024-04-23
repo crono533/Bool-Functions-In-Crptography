@@ -9,6 +9,8 @@
 #include <chrono>
 using namespace std;
 
+int MAX_INT = 0x7FFFFFFF;
+
 class BF
 {
 private:
@@ -169,7 +171,7 @@ BF::BF(size_t n_, int type) : n(n_) // КОНСРУКТОР
             else
             {
                 for (unsigned int i = 0; i < nw; i++)
-                    func[i] = __INT_MAX__ * 2U + 1; // Устанавливаем все биты в единицу
+                    func[i] = MAX_INT * 2U + 1; // Устанавливаем все биты в единицу
                 // 2U - u указывает компилятору что число 2 будет беззнаковое, +1 нужен чтобы досигнуть лимита размера usnigned int
             }
         }
@@ -194,7 +196,7 @@ BF::BF(size_t n_, int type) : n(n_) // КОНСРУКТОР
                 for (unsigned int i = 0; i < nw; i++)
                 {
                     // Создаем равномерное распределение от 0 до __INT_MAX__ * 2U + 1
-                    uniform_int_distribution<unsigned int> distribution(0, __INT_MAX__ * 2U + 1);
+                    uniform_int_distribution<unsigned int> distribution(0, MAX_INT * 2U + 1);
                     func[i] = distribution(gen);
                 }
             }
@@ -605,6 +607,74 @@ void BF::linear_variables()
         cout << "Have no linear vars";
 }
 
+// void BF::nearest_counterweigh()
+// {
+
+//     int weight_of_func = this->weight_1_alg();
+
+//     cout << weight_of_func << endl;
+
+//     if(weight_of_func == ((1<<n) >> 1))
+//     {
+//         cerr << "This func already counterweight" << endl;
+//         return;
+//     }
+
+//     BF copy_of_func = *this;
+
+//     int counterweight = ((1 << n) >> 1);
+
+//     if(weight_of_func > counterweight)
+//     {
+//         int how_many_to_fill_zero = weight_of_func - counterweight;
+
+//         for(int i = 0; i < nw; i++)
+//         {
+//             int mask = 0;
+//             for(int j = 0; j < 32; j++)
+//             {
+//                 mask = 1 << j;
+//                 if(func[i] & mask)
+//                 {
+//                     copy_of_func.set_k_bit(j + (i << 5), 0);
+//                     how_many_to_fill_zero--;
+//                 }
+//                 if(how_many_to_fill_zero == 0)
+//                 {
+//                     cout << copy_of_func << endl;
+//                     return;
+//                 }
+//             }
+//         }
+
+//     }
+//     else
+//     {
+//         int how_many_to_fill_zero = counterweight - weight_of_func;
+
+//         for (int i = 0; i < nw; i++)
+//         {
+//             int mask = 0;
+//             for (int j = 0; j < 32; j++)
+//             {
+//                 mask = 1 << j;
+//                 if (!(func[i] & mask))
+//                 {
+//                     copy_of_func.set_k_bit(j + (i << 5), 1);
+//                     how_many_to_fill_zero--;
+//                 }
+//                 if (how_many_to_fill_zero == 0)
+//                 {
+//                     cout << copy_of_func << endl;
+//                     return;
+//                 }
+//             }
+//         }
+
+//     }
+
+// }
+
 void BF::nearest_counterweigh()
 {
 
@@ -612,65 +682,54 @@ void BF::nearest_counterweigh()
 
     cout << weight_of_func << endl;
 
-    if(weight_of_func == ((1<<n) >> 1))
+    if (weight_of_func == ((1 << n) >> 1))
     {
         cerr << "This func already counterweight" << endl;
         return;
     }
 
     BF copy_of_func = *this;
-    
+
     int counterweight = ((1 << n) >> 1);
 
-    if(weight_of_func > counterweight)
+    if (weight_of_func > counterweight)
     {
         int how_many_to_fill_zero = weight_of_func - counterweight;
 
-        for(int i = 0; i < nw; i++)
+        for (int i = 0; i < nw;)
         {
-            int mask = 0;
-            for(int j = 0; j < 32; j++)
-            {
-                mask = 1 << j;
-                if(func[i] & mask)
-                {
-                    copy_of_func.set_k_bit(j + (i << 5), 0);
-                    how_many_to_fill_zero--;
-                }
-                if(how_many_to_fill_zero == 0)
-                {
-                    cout << copy_of_func << endl;
-                    return;
-                }
-            }
-        }
-
+			if (copy_of_func.func[i] != 0)
+			{
+				copy_of_func.func[i] = (copy_of_func.func[i] - 1) & copy_of_func.func[i];
+				how_many_to_fill_zero--;
+				if (how_many_to_fill_zero == 0)
+				{
+					cout << copy_of_func << endl;
+					return;
+				}
+			}
+			else i++;
+		}
     }
     else
     {
-        int how_many_to_fill_zero = counterweight - weight_of_func;
-
-        for (int i = 0; i < nw; i++)
+        int how_many_to_set = counterweight - weight_of_func;
+        for (int i = 0; i < nw;)
         {
-            int mask = 0;
-            for (int j = 0; j < 32; j++)
+
+            if (copy_of_func.func[i] != 0xFFFFFFFF)
             {
-                mask = 1 << j;
-                if (!(func[i] & mask))
-                {
-                    copy_of_func.set_k_bit(j + (i << 5), 1);
-                    how_many_to_fill_zero--;
-                }
-                if (how_many_to_fill_zero == 0)
+                copy_of_func.func[i] = (copy_of_func.func[i] + 1) | copy_of_func.func[i];
+                how_many_to_set--;
+                if (how_many_to_set == 0)
                 {
                     cout << copy_of_func << endl;
                     return;
                 }
             }
+            else i++;
         }
-    
     }
-
 }
 
 //функция которая позволяет установить или обнулить бит (работает от 0 до количесвтва бит - 1 соответственно)
@@ -688,7 +747,7 @@ void BF::set_k_bit(int bit_number_ltr_in_arr, bool bit)
 
         if (bit_number_ltr_in_arr >= 32) // проверяем, если номер бита больше или равен 8 для того чтобы правльно осуществлять сдвиг маски
         {
-                bit_number_ltr_in_arr %= 32;
+            bit_number_ltr_in_arr %= 32;
         }
 
         int ix_bit_ltr = bit_number_ltr_in_arr;
@@ -1029,15 +1088,35 @@ void Test_nl()
 //тест для поиска наилучшего афинного приближения
 void Test_BAA()
 {
+    cout << "------------------------------------------------" << endl;
+    BF for_baa1("10000110");
+    cout << for_baa1 << endl;
+    for_baa1.best_affine_approximation();
+    cout << endl;
+    cout << "------------------------------------------------" << endl;
+
     BF for_baa("00100010");
     cout << for_baa << endl;
     for_baa.best_affine_approximation();
-
     cout << endl;
+    cout << "------------------------------------------------" << endl;
+
 }
 
 void Test_nearest_counterwaight()
 {
+    cout << "------------------------------------------------" << endl;
+    BF func00("1111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+    cout << func00 << endl;
+    func00.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func01("0000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+    cout << func01 << endl;
+    func01.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func0("0000");
+    cout << func0 << endl;
+    func0.nearest_counterweigh();
     cout << "------------------------------------------------" << endl;
     BF func1("0000000000000000000000000000000000000000000000000000000000000000");
     cout << func1 << endl;
