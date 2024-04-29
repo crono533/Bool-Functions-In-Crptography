@@ -43,6 +43,8 @@ public:
     int cor();
     int nonlinearity();
     void best_affine_approximation();
+    vector<int> auto_cor();
+    int cnf();
 };
 
 size_t BF::get_n()
@@ -607,74 +609,6 @@ void BF::linear_variables()
         cout << "Have no linear vars";
 }
 
-// void BF::nearest_counterweigh()
-// {
-
-//     int weight_of_func = this->weight_1_alg();
-
-//     cout << weight_of_func << endl;
-
-//     if(weight_of_func == ((1<<n) >> 1))
-//     {
-//         cerr << "This func already counterweight" << endl;
-//         return;
-//     }
-
-//     BF copy_of_func = *this;
-
-//     int counterweight = ((1 << n) >> 1);
-
-//     if(weight_of_func > counterweight)
-//     {
-//         int how_many_to_fill_zero = weight_of_func - counterweight;
-
-//         for(int i = 0; i < nw; i++)
-//         {
-//             int mask = 0;
-//             for(int j = 0; j < 32; j++)
-//             {
-//                 mask = 1 << j;
-//                 if(func[i] & mask)
-//                 {
-//                     copy_of_func.set_k_bit(j + (i << 5), 0);
-//                     how_many_to_fill_zero--;
-//                 }
-//                 if(how_many_to_fill_zero == 0)
-//                 {
-//                     cout << copy_of_func << endl;
-//                     return;
-//                 }
-//             }
-//         }
-
-//     }
-//     else
-//     {
-//         int how_many_to_fill_zero = counterweight - weight_of_func;
-
-//         for (int i = 0; i < nw; i++)
-//         {
-//             int mask = 0;
-//             for (int j = 0; j < 32; j++)
-//             {
-//                 mask = 1 << j;
-//                 if (!(func[i] & mask))
-//                 {
-//                     copy_of_func.set_k_bit(j + (i << 5), 1);
-//                     how_many_to_fill_zero--;
-//                 }
-//                 if (how_many_to_fill_zero == 0)
-//                 {
-//                     cout << copy_of_func << endl;
-//                     return;
-//                 }
-//             }
-//         }
-
-//     }
-
-// }
-
 void BF::nearest_counterweigh()
 {
 
@@ -913,7 +847,47 @@ void BF::best_affine_approximation()
     }
 }
 
+vector<int> BF::auto_cor()
+{
+    vector<int> walsh_vector = this->walshHadamardTransform();
 
+    for (auto &iter : walsh_vector)
+        iter = abs(iter << 1);
+
+    // Выполняем бабочку
+    int size = walsh_vector.size();
+    for (size_t length = 1; length < size; length <<= 1)
+    {
+        for (size_t i = 0; i < size; i += length << 1)
+        {
+            for (size_t j = 0; j < length; ++j)
+            {
+                int a = walsh_vector[i + j];
+                int b = walsh_vector[i + j + length];
+                walsh_vector[i + j] = a + b;          // Рассчитываем сумму
+                walsh_vector[i + j + length] = a - b; // Рассчитываем разность
+            }
+        }
+    }
+
+    return walsh_vector;
+}
+
+int BF::cnf()
+{
+    vector<int> auto_cor = this->auto_cor();
+    int max_auto_cor = 0;
+
+    for (int i = 1; i < auto_cor.size(); i++)
+    {
+        if (abs(auto_cor[i]) > max_auto_cor)
+            max_auto_cor = abs(auto_cor[i]);
+    }
+
+
+    return ((1 << (n-2)) - (max_auto_cor / 4));
+
+}
 // условие уравновешенности функции: w(f) / 2^n =(примерно) 0.5
 void Test_of_counterweigh()
 {
@@ -1045,7 +1019,6 @@ void Test_dummy_vars()
     cout << endl;
 }
 
-
 void Test_linear_vars()
 {
     BF for_linear("10010110"); //все линейные
@@ -1140,6 +1113,22 @@ void Test_nearest_counterwaight()
     cout << "------------------------------------------------" << endl;
 
 }
+
+void Test_auto_cor()
+{
+    BF func1("0001");
+    vector<int> auto_cor = func1.auto_cor();
+    for(auto iter : auto_cor)
+        cout << iter << " ";
+    cout << endl;
+}
+
+void Test_cnf()
+{
+    BF func1("0001");
+    cout<< "CNf = " << func1.cnf() << endl;
+}
+
 int main()
 {
     setlocale(LC_ALL, "Rus");
@@ -1161,6 +1150,10 @@ int main()
     // Test_nl();
     // Test_BAA();
 
+    //lab5 Автокорреляция + совершенная нелинейность 
+    Test_auto_cor();
+    Test_cnf();
+
     // Доп задание 1: дан вектор значений функции вывести все фиктивные перменные эффективным образом
     // Test_dummy_vars();
 
@@ -1169,8 +1162,8 @@ int main()
 
     //Доп задание 3: дан вектор, найти ближайший уравновешенный вектор
     // Test_nearest_counterwaight();
-    BF func("0000000000000000000000000000000000000000000000000000000000000000");
-    func.set_k_bit(0,1);
-    cout << func;
+    // BF func("0000000000000000000000000000000000000000000000000000000000000000");
+    // func.set_k_bit(0,1);
+    // cout << func;
     return 0;
 }
