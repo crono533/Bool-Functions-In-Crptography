@@ -1168,6 +1168,9 @@ int main()
     // Test_linear_vars();
 
     //Доп задание 3: дан вектор, найти ближайший уравновешенный вектор
-    Test_nearest_counterwaight();
+    // Test_nearest_counterwaight();
+    BF func("0000000000000000000000000000000000000000000000000000000000000000");
+    func.set_k_bit(0,1);
+    cout << func;
     return 0;
 }
