@@ -9,25 +9,27 @@
 #include <chrono>
 using namespace std;
 
+int MAX_INT = 0x7FFFFFFF;
+
 class BF
 {
 private:
     size_t n;                     // количество переменных функции
     size_t nw;                    // количество байт требующихся на переменные (1 байт - 5 переменных)
-    unsigned int *func = nullptr; // указатель на область памяти в которой хранится булева функция
+    unsigned int* func = nullptr; // указатель на область памяти в которой хранится булева функция
 
 public:
     BF(size_t n = 2, int type = 0); // конструтор с разными флагами для создания разных функций
-    BF(const BF &);                 // конструктор копирования
-    BF(const char *);
+    BF(const BF&);                 // конструктор копирования
+    BF(const char*);
     ~BF();        // дестркутор
     void print(); // метод для того чтобы выводить вектор полностью
     unsigned int weight_1_alg();
     unsigned int weight_2_alg();
-    friend ostream &operator<<(ostream &out, const BF &f);
-    friend istream &operator>>(istream &in, BF &f);
-    BF operator=(const BF &f);
-    bool operator==(const BF &f);
+    friend ostream& operator<<(ostream& out, const BF& f);
+    friend istream& operator>>(istream& in, BF& f);
+    BF operator=(const BF& f);
+    bool operator==(const BF& f);
     size_t get_n();
     size_t get_nw();
     BF mebius_func();
@@ -36,6 +38,7 @@ public:
     vector<int> walshHadamardTransform();
     void dummy_variable();
     void linear_variables();
+    void nearest_counterweigh();
     void set_k_bit(int bit_number_ltr_in_arr, bool bit);
     int cor();
     int nonlinearity();
@@ -52,7 +55,7 @@ size_t BF::get_nw()
     return nw;
 }
 
-istream &operator>>(istream &in, BF &f)
+istream& operator>>(istream& in, BF& f)
 {
     string input;
     cout << "Enter the boolean function as a string of 0s and 1s: ";
@@ -67,7 +70,7 @@ istream &operator>>(istream &in, BF &f)
     return in;
 }
 
-ostream &operator<<(ostream &out, const BF &f)
+ostream& operator<<(ostream& out, const BF& f)
 {
     if (f.func)
     {
@@ -107,7 +110,7 @@ ostream &operator<<(ostream &out, const BF &f)
     return out;
 }
 
-BF BF::operator=(const BF &f)
+BF BF::operator=(const BF& f)
 {
     if (this == &f) // проверка на самоприсваивание
         return *this;
@@ -127,7 +130,7 @@ BF BF::operator=(const BF &f)
     return *this;
 }
 
-bool BF::operator==(const BF &f)
+bool BF::operator==(const BF& f)
 {
     if (this->n != f.n)
         return false;
@@ -142,7 +145,7 @@ bool BF::operator==(const BF &f)
 BF::BF(size_t n_, int type) : n(n_) // КОНСРУКТОР
 {
     nw = ((unsigned int)(1 << n) + 31) >> 5; // 1<<n возведение в степень n , +31 k=32 (32-1) = 31, получилось что сразу без переполнения,
-                                             //>>5 поделить на 32 (это все для формулы [2^n/32] - узнаем сколько потребуется памяти для переменных)
+    //>>5 поделить на 32 (это все для формулы [2^n/32] - узнаем сколько потребуется памяти для переменных)
     if (type == 0)                           // если флаг 0, то функция нулевая
     {
         func = new unsigned int[nw];
@@ -168,7 +171,7 @@ BF::BF(size_t n_, int type) : n(n_) // КОНСРУКТОР
             else
             {
                 for (unsigned int i = 0; i < nw; i++)
-                    func[i] = __INT_MAX__ * 2U + 1; // Устанавливаем все биты в единицу
+                    func[i] = MAX_INT * 2U + 1; // Устанавливаем все биты в единицу
                 // 2U - u указывает компилятору что число 2 будет беззнаковое, +1 нужен чтобы досигнуть лимита размера usnigned int
             }
         }
@@ -193,7 +196,7 @@ BF::BF(size_t n_, int type) : n(n_) // КОНСРУКТОР
                 for (unsigned int i = 0; i < nw; i++)
                 {
                     // Создаем равномерное распределение от 0 до __INT_MAX__ * 2U + 1
-                    uniform_int_distribution<unsigned int> distribution(0, __INT_MAX__ * 2U + 1);
+                    uniform_int_distribution<unsigned int> distribution(0, MAX_INT * 2U + 1);
                     func[i] = distribution(gen);
                 }
             }
@@ -222,7 +225,7 @@ size_t count_zeros(unsigned int len)
     return count - 1;
 }
 
-BF::BF(const char *function)
+BF::BF(const char* function)
 {
     size_t len = strlen(function); // Длина строки
     if ((len & (len - 1)) != 0)    // Проверка, является ли n степенью двойки
@@ -254,7 +257,7 @@ BF::BF(const char *function)
     }
 }
 
-BF::BF(const BF &f)
+BF::BF(const BF& f)
 {
     this->n = f.n;
     this->nw = f.nw;
@@ -478,12 +481,12 @@ vector<int> BF::walshHadamardTransform()
             if (func[i] & (1U << j))
             {
                 if (((i << 5) + j) < transformed_func.size())
-                transformed_func[(i << 5) + j] = -1; // Преобразуем 1 в -1
+                    transformed_func[(i << 5) + j] = -1; // Преобразуем 1 в -1
             }
             else
             {
                 if (((i << 5) + j) < transformed_func.size())
-                transformed_func[(i << 5) + j] = 1; // Преобразуем 0 в 1
+                    transformed_func[(i << 5) + j] = 1; // Преобразуем 0 в 1
             }
         }
     }
@@ -521,17 +524,17 @@ void BF::dummy_variable()
     BF mebius = this->mebius_func();
     unsigned int tmp1 = 0;
 
-    
+
 
     for (int ix_byte = 0; ix_byte < mebius.nw; ix_byte++)
         for (unsigned int ix_bit = 0; ix_bit < 32; ix_bit++)
             if (mebius.func[ix_byte] & (1U << ix_bit))
             {
-               
-              
-                        tmp1 |= ix_bit+ (ix_byte << 5);
-                   
-            
+
+
+                tmp1 |= ix_bit + (ix_byte << 5);
+
+
             }
 
     // Вывод результата дизъюнкции для проверки результата
@@ -549,7 +552,7 @@ void BF::dummy_variable()
 
     cout << endl;
 
-    if (tmp1 == ((1<<n)-1))
+    if (tmp1 == ((1 << n) - 1))
     {
         cout << "Has no dummy variables";
         return;
@@ -578,7 +581,7 @@ void BF::linear_variables()
                 weight_of_vec = w(ix_bit + (ix_byte << 5));
 
 
-                if(weight_of_vec == 1)
+                if (weight_of_vec == 1)
                 {
                     tmp_weight_1 |= (ix_bit + (ix_byte << 5));
                 }
@@ -604,11 +607,137 @@ void BF::linear_variables()
         cout << "Have no linear vars";
 }
 
+// void BF::nearest_counterweigh()
+// {
+
+//     int weight_of_func = this->weight_1_alg();
+
+//     cout << weight_of_func << endl;
+
+//     if(weight_of_func == ((1<<n) >> 1))
+//     {
+//         cerr << "This func already counterweight" << endl;
+//         return;
+//     }
+
+//     BF copy_of_func = *this;
+
+//     int counterweight = ((1 << n) >> 1);
+
+//     if(weight_of_func > counterweight)
+//     {
+//         int how_many_to_fill_zero = weight_of_func - counterweight;
+
+//         for(int i = 0; i < nw; i++)
+//         {
+//             int mask = 0;
+//             for(int j = 0; j < 32; j++)
+//             {
+//                 mask = 1 << j;
+//                 if(func[i] & mask)
+//                 {
+//                     copy_of_func.set_k_bit(j + (i << 5), 0);
+//                     how_many_to_fill_zero--;
+//                 }
+//                 if(how_many_to_fill_zero == 0)
+//                 {
+//                     cout << copy_of_func << endl;
+//                     return;
+//                 }
+//             }
+//         }
+
+//     }
+//     else
+//     {
+//         int how_many_to_fill_zero = counterweight - weight_of_func;
+
+//         for (int i = 0; i < nw; i++)
+//         {
+//             int mask = 0;
+//             for (int j = 0; j < 32; j++)
+//             {
+//                 mask = 1 << j;
+//                 if (!(func[i] & mask))
+//                 {
+//                     copy_of_func.set_k_bit(j + (i << 5), 1);
+//                     how_many_to_fill_zero--;
+//                 }
+//                 if (how_many_to_fill_zero == 0)
+//                 {
+//                     cout << copy_of_func << endl;
+//                     return;
+//                 }
+//             }
+//         }
+
+//     }
+
+// }
+
+void BF::nearest_counterweigh()
+{
+
+    int weight_of_func = this->weight_1_alg();
+
+    cout << weight_of_func << endl;
+
+    if (weight_of_func == ((1 << n) >> 1))
+    {
+        cerr << "This func already counterweight" << endl;
+        return;
+    }
+
+    BF copy_of_func = *this;
+
+    int counterweight = ((1 << n) >> 1);
+
+    if (weight_of_func > counterweight)
+    {
+        int how_many_to_fill_zero = weight_of_func - counterweight;
+
+        for (int i = 0; i < nw;)
+        {
+			if (copy_of_func.func[i] != 0)
+			{
+				copy_of_func.func[i] = (copy_of_func.func[i] - 1) & copy_of_func.func[i];
+				how_many_to_fill_zero--;
+				if (how_many_to_fill_zero == 0)
+				{
+					cout << copy_of_func << endl;
+					return;
+				}
+			}
+			else i++;
+		}
+    }
+    else
+    {
+        int how_many_to_set = counterweight - weight_of_func;
+        for (int i = 0; i < nw;)
+        {
+
+            if (copy_of_func.func[i] != 0xFFFFFFFF)
+            {
+                copy_of_func.func[i] = (copy_of_func.func[i] + 1) | copy_of_func.func[i];
+                how_many_to_set--;
+                if (how_many_to_set == 0)
+                {
+                    cout << copy_of_func << endl;
+                    return;
+                }
+            }
+            else i++;
+        }
+    }
+}
+
+//функция которая позволяет установить или обнулить бит (работает от 0 до количесвтва бит - 1 соответственно)
 void BF::set_k_bit(int bit_number_ltr_in_arr, bool bit)
 {
     if (bit_number_ltr_in_arr >= (1 << n)) // случай когда пытаемся установить или обнулить бит которого нет
     {
-        cerr << "Error in set_k_bit: Unable to reach this bit " << endl; 
+        cerr << "Error in set_k_bit: Unable to reach this bit " << endl;
         return;
     }
 
@@ -618,22 +747,21 @@ void BF::set_k_bit(int bit_number_ltr_in_arr, bool bit)
 
         if (bit_number_ltr_in_arr >= 32) // проверяем, если номер бита больше или равен 8 для того чтобы правльно осуществлять сдвиг маски
         {
-            while (bit_number_ltr_in_arr >= 32)
-                bit_number_ltr_in_arr %= 32;
+            bit_number_ltr_in_arr %= 32;
         }
 
         int ix_bit_ltr = bit_number_ltr_in_arr;
         int ix_bit_rtl = 32 - ix_bit_ltr;
-        if (ix_bit_rtl < 0){
+        if (ix_bit_rtl < 0) {
             cerr << "Error" << endl;
             return;
         }
 
-        unsigned char mask = 1 << ix_bit_rtl;
+        unsigned int mask = 1 << ix_bit_ltr;
         int byte = copy_bit_number_ltr_in_arr / 32;
         if (bit)
         {
-           func[byte] |= mask;
+            func[byte] |= mask;
         }
         else
         {
@@ -646,7 +774,7 @@ void BF::set_k_bit(int bit_number_ltr_in_arr, bool bit)
 int BF::cor()
 {
 
-    if((this->weight_2_alg() % 2) != 0)
+    if ((this->weight_2_alg() % 2) != 0)
     {
         cerr << "Funcion has odd wight\n";
         return 0;
@@ -665,7 +793,7 @@ int BF::cor()
     for (int i = 1; i <= n; i++)
     {
         a = ((1 << i) - 1) << (n - i);
-        cout << a  << endl;
+        cout << a << endl;
         // if (a < walsh_vector.size())
         {
             if (walsh_vector[a] != 0)
@@ -680,11 +808,11 @@ int BF::cor()
                 a = (((((a + 1) ^ a) << 1) + 1) << c) ^ b;
 
                 // if (a < walsh_vector.size())
-                 cout << a << endl;
-                    if (walsh_vector[a] != 0)
-                    {
-                        return i - 1;
-                    }
+                cout << a << endl;
+                if (walsh_vector[a] != 0)
+                {
+                    return i - 1;
+                }
             }
         }
     }
@@ -698,22 +826,22 @@ int BF::nonlinearity()
     int max_f = 0;
     vector<int> walsh_vector = this->walshHadamardTransform();
 
-    for(auto iter : walsh_vector)
+    for (auto iter : walsh_vector)
     {
-        if(abs(iter) > max_f)
+        if (abs(iter) > max_f)
             max_f = abs(iter);
     }
 
-    return (1 << (n-1)) - (max_f/2);
+    return (1 << (n - 1)) - (max_f / 2);
 }
 
 //Поиск максимального коэффициента Уолша Адамара
 int find_max_fa(vector<int> vector)
 {
     int max_f = 0;
-    for(auto iter : vector)
+    for (auto iter : vector)
     {
-        if(abs(iter) > max_f)
+        if (abs(iter) > max_f)
             max_f = abs(iter);
     }
     return max_f;
@@ -743,23 +871,23 @@ void BF::best_affine_approximation()
     {
         if (abs(walsh_vector[i]) == max_fa)
         {
-            if( i == 0 )
+            if (i == 0)
             {
                 cout << 0;
             }
-            w_flag = w(i)+1;
+            w_flag = w(i) + 1;
             if (walsh_vector[i] < 0)
             {
                 cout << "1";
-                w_flag--; 
-                if(w_flag){ cout << " + "; };
+                w_flag--;
+                if (w_flag) { cout << " + "; };
                 for (unsigned int ix = 0, mask = 1; ix < n; mask <<= 1, ix++)
                 {
                     if (i & mask)
                     {
-                        w_flag --;
-                        cout << "x_" << n-ix;
-                        if(w_flag){ cout << " + "; }
+                        w_flag--;
+                        cout << "x_" << n - ix;
+                        if (w_flag) { cout << " + "; }
                     }
                 }
                 // break;
@@ -767,14 +895,14 @@ void BF::best_affine_approximation()
             }
             else
             {
-                w_flag--; 
+                w_flag--;
                 for (unsigned int ix = 0, mask = 1; ix < n; mask <<= 1, ix++)
                 {
                     if (i & mask)
                     {
-                        w_flag --;
-                        cout << "x_" << n-ix;
-                        if(w_flag){cout << " + ";};
+                        w_flag--;
+                        cout << "x_" << n - ix;
+                        if (w_flag) { cout << " + "; };
                     }
                 }
                 // break;
@@ -810,10 +938,10 @@ void Test_mebius_fucn()
 
         if (mebiusOfRandom.mebius_func() == random)
             cout << i << " - "
-                << "mebius func is correct" << endl;
+            << "mebius func is correct" << endl;
         else
             cout << i << " - "
-                << "mebius func is incorrect" << endl;
+            << "mebius func is incorrect" << endl;
     }
 }
 
@@ -851,7 +979,7 @@ void Test_Walsh_Hadamar()
 }
 
 // проверям время работы ПУА и максимальное число переменных которое ПУА в моей реализации может сделать
-chrono::_V2::system_clock Test_time_Walsh_Hadamar()
+void Test_time_Walsh_Hadamar()
 {
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 1000000; ++i)
@@ -868,6 +996,7 @@ chrono::_V2::system_clock Test_time_Walsh_Hadamar()
 
     // Выводим продолжительность в микросекундах
     std::cout << "Time " << duration.count() << " seconds" << std::endl;
+
 }
 
 // в интернете нашел набор разных функций, рядом с ними была написала их cor(f), просто сравнил
@@ -959,11 +1088,57 @@ void Test_nl()
 //тест для поиска наилучшего афинного приближения
 void Test_BAA()
 {
+    cout << "------------------------------------------------" << endl;
+    BF for_baa1("10000110");
+    cout << for_baa1 << endl;
+    for_baa1.best_affine_approximation();
+    cout << endl;
+    cout << "------------------------------------------------" << endl;
+
     BF for_baa("00100010");
     cout << for_baa << endl;
     for_baa.best_affine_approximation();
-
     cout << endl;
+    cout << "------------------------------------------------" << endl;
+
+}
+
+void Test_nearest_counterwaight()
+{
+    cout << "------------------------------------------------" << endl;
+    BF func00("1111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+    cout << func00 << endl;
+    func00.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func01("0000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+    cout << func01 << endl;
+    func01.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func0("0000");
+    cout << func0 << endl;
+    func0.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func1("0000000000000000000000000000000000000000000000000000000000000000");
+    cout << func1 << endl;
+    func1.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func2("1111111111111111111111111111111111111111111111111111111111111111");
+    cout << func2 << endl;
+    func2.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func3("0001");
+    cout << func3 << endl;
+    func3.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func4("1110");
+    cout << func4 << endl;
+    func4.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+    BF func("0001000001001010");
+    cout << func << endl;
+    func.nearest_counterweigh();
+    cout << "------------------------------------------------" << endl;
+
 }
 int main()
 {
@@ -993,8 +1168,6 @@ int main()
     // Test_linear_vars();
 
     //Доп задание 3: дан вектор, найти ближайший уравновешенный вектор
-    BF func("0000000000000000000000000000000000000000000000000000000000000000");
-    func.set_k_bit(1,1);
-    cout << func << endl;
+    Test_nearest_counterwaight();
     return 0;
 }
